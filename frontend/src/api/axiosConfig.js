@@ -3,7 +3,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'http://localhost:5001', // Backend URL
+  baseURL: 'https://backend-delicate-fog-5687.fly.dev/', // Replace with your Fly.io app URL
   headers: {
     'Content-Type': 'application/json',
   },

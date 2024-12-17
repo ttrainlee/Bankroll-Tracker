@@ -1,9 +1,7 @@
-// src/context/AuthContext.jsx
-
 import React, { createContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode'; // Corrected import
+import { jwtDecode } from 'jwt-decode';
 import { useNavigate } from 'react-router-dom';
-import API from '../api/axiosConfig'; // Import the Axios instance
+import API from '../api/axiosConfig';
 
 export const AuthContext = createContext();
 
@@ -19,18 +17,17 @@ const AuthProvider = ({ children }) => {
     if (auth.token) {
       try {
         const decoded = jwtDecode(auth.token);
-        setAuth((prev) => ({
-          ...prev,
+        setAuth({
+          ...auth,
           user: {
             id: decoded.userId,
             email: decoded.email,
             role: decoded.role,
           },
-        }));
+        });
       } catch (error) {
         console.error('Invalid token', error);
-        setAuth({ token: null, user: null });
-        localStorage.removeItem('token');
+        logout();
       }
     }
   }, [auth.token]);
@@ -51,7 +48,7 @@ const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('token');
     setAuth({ token: null, user: null });
-    navigate('/');
+    navigate('/login');
   };
 
   return (
@@ -61,4 +58,4 @@ const AuthProvider = ({ children }) => {
   );
 };
 
-export default AuthProvider;
+export default AuthProvider; // Default export

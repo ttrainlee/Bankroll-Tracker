@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme'; // Import the theme you just created
 import './index.css'; // Ensure your global CSS is still imported
-import AuthProvider from './context/AuthContext'; // Import AuthProvider
+import AuthProvider, { AuthContext } from './context/AuthContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

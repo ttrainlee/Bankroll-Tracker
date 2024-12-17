@@ -19,7 +19,7 @@ const app = express();
 
 // Define CORS options
 const corsOptions = {
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: ['https://frontend-quiet-river-1797.fly.dev'], // Frontend URL
   methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
   allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
   credentials: true, // Allow credentials (e.g., cookies, authorization headers)
@@ -45,7 +45,7 @@ app.use(morgan('dev'));
 // Environment Variables
 // ---------------------
 
-const PORT = process.env.PORT || 5001;
+const PORT = process.env.PORT || 8080; // Fly.io uses 8080 as the default port
 const DATABASE_URL = process.env.DATABASE_URL;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret'; // Ensure to set this in your .env
 
@@ -273,7 +273,7 @@ app.post(
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      // Return validation errors
+      console.error('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
@@ -291,14 +291,18 @@ app.post(
     const user_id = req.user.userId;
 
     try {
+      console.log('Incoming request body:', req.body); // Debug payload
+      console.log('User ID:', user_id); // Confirm user ID from token
+
       // Calculate win_loss
       const win_loss = parseFloat(cash_out_amount) - parseFloat(buy_in_amount) * parseInt(number_of_buy_ins, 10);
 
+      // Insert session into database
       const result = await pool.query(
         `INSERT INTO sessions 
-          (user_id, buy_in_amount, cash_out_amount, number_of_buy_ins, stakes, game_type, location, session_date, notes, win_loss)
+          (user_id, buy_in_amount, cash_out_amount, number_of_buy_ins, stakes, game_type, location, session_date, notes)
          VALUES 
-          ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9)
          RETURNING *;`,
         [
           user_id,
@@ -310,9 +314,10 @@ app.post(
           location,
           session_date,
           notes,
-          win_loss,
         ]
-      );
+      );      
+
+      console.log('Insert result:', result.rows[0]);
 
       // Calculate cumulative W/L
       const cumulativeResult = await pool.query(
@@ -330,12 +335,13 @@ app.post(
         cumulative_win_loss: cumulativeWinLoss,
       });
     } catch (err) {
-      console.error('Error executing query:', err.message);
-      console.error(err.stack);
-      res.status(500).json({ error: 'Internal Server Error' });
+      console.error('Error in /sessions route:', err.message);
+      console.error(err.stack); // Detailed error stack
+      res.status(500).json({ error: 'Internal Server Error', details: err.message });
     }
   }
 );
+
 /**
  * @route   GET /sessions
  * @desc    Retrieve all gaming sessions for the authenticated user along with cumulative W/L
